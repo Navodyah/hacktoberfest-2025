@@ -25,19 +25,6 @@ class HacktoberfestDesktopUI:
         self.style.configure("Title.TLabel", font=("Helvetica", 16, "bold"))
         self.style.configure("Header.TLabel", font=("Helvetica", 12, "bold"))
         self.style.configure("Stats.TLabel", font=("Helvetica", 10))
-        # Primary button style (modern blue)
-        # Note: ttk on Windows uses native theme; to ensure color works we'll set relief and focuscolor where supported
-        primary_bg = "#1f6feb"
-        primary_fg = "#ffffff"
-        self.style.configure("Primary.TButton",
-                             background=primary_bg,
-                             foreground=primary_fg,
-                             relief="flat",
-                             padding=6)
-        # Map active and pressed states to slightly different shades
-        self.style.map("Primary.TButton",
-                       background=[('active', '#155ed1'), ('pressed', '#134fb3')],
-                       foreground=[('disabled', '#dddddd')])
         
     def create_menu(self):
         menubar = tk.Menu(self.root)
