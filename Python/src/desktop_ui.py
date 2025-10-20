@@ -84,42 +84,89 @@ class HacktoberfestDesktopUI:
         self.setup_add_forms()
 
     def setup_dashboard(self):
-        # Title
-        title = ttk.Label(
-            self.dashboard_tab,
-            text="Project Dashboard",
+        # Main container with padding
+        main_frame = ttk.Frame(self.dashboard_tab, padding="10 5 10 10")
+        main_frame.pack(fill='both', expand=True)
+
+        # Welcome message with current date
+        welcome_frame = ttk.Frame(main_frame)
+        welcome_frame.pack(fill='x', pady=(0, 10))
+        
+        welcome_msg = ttk.Label(
+            welcome_frame,
+            text="Hacktoberfest 2025",
             style="Title.TLabel"
         )
-        title.pack(pady=10)
+        welcome_msg.pack(side='left')
         
-        # Stats frame
-        stats_frame = ttk.LabelFrame(self.dashboard_tab, text="Project Statistics")
-        stats_frame.pack(fill='x', padx=10, pady=5)
+        date_label = ttk.Label(
+            welcome_frame,
+            text=datetime.now().strftime("%B %d, %Y"),
+            style="Stats.TLabel"
+        )
+        date_label.pack(side='right')
+
+        # Stats cards in a row
+        stats_frame = ttk.Frame(main_frame)
+        stats_frame.pack(fill='x', pady=(0, 10))
         
-        self.stats_labels = {
-            'total_contributors': ttk.Label(stats_frame, style="Stats.TLabel"),
-            'total_contributions': ttk.Label(stats_frame, style="Stats.TLabel"),
-            'completion_rate': ttk.Label(stats_frame, style="Stats.TLabel"),
-            'active_days': ttk.Label(stats_frame, style="Stats.TLabel")
-        }
-        
-        for label in self.stats_labels.values():
-            label.pack(anchor='w', padx=5, pady=2)
-            
-        # Recent Activity
-        activity_frame = ttk.LabelFrame(self.dashboard_tab, text="Recent Activity")
-        activity_frame.pack(fill='both', expand=True, padx=10, pady=5)
-        
-        self.activity_tree = ttk.Treeview(
-            activity_frame,
-            columns=("Date", "Username", "Action", "Details"),
-            show="headings"
+        # Configure styles for stats cards
+        self.style.configure(
+            "Card.TFrame",
+            background="#f6f8fa",
+            relief="solid",
+            borderwidth=1
         )
         
-        self.activity_tree.heading("Date", text="Date")
-        self.activity_tree.heading("Username", text="Username")
-        self.activity_tree.heading("Action", text="Action")
-        self.activity_tree.heading("Details", text="Details")
+        # Create metric cards
+        self.stats_vars = {
+            'contributors': tk.StringVar(value="0"),
+            'contributions': tk.StringVar(value="0"),
+            'completion': tk.StringVar(value="0%")
+        }
+        
+        # Metric cards with icons
+        cards_data = [
+            ("👥", "Contributors", 'contributors'),
+            ("📝", "Contributions", 'contributions'),
+            ("🎯", "Completion", 'completion')
+        ]
+        
+        for i, (icon, label, var_key) in enumerate(cards_data):
+            card = ttk.Frame(stats_frame, style="Card.TFrame")
+            card.grid(row=0, column=i, padx=5, sticky='nsew')
+            stats_frame.grid_columnconfigure(i, weight=1)
+            
+            ttk.Label(
+                card,
+                text=f"{icon} {label}",
+                style="Header.TLabel"
+            ).pack(pady=(8, 2))
+            
+            ttk.Label(
+                card,
+                textvariable=self.stats_vars[var_key],
+                style="Stats.TLabel"
+            ).pack(pady=(0, 8))
+        
+        # Recent activity (small size)
+        activity_frame = ttk.LabelFrame(main_frame, text="Recent Activity")
+        activity_frame.pack(fill='both', expand=True)
+        
+        # Compact activity list
+        self.activity_tree = ttk.Treeview(
+            activity_frame,
+            columns=("Time", "Activity"),
+            show="headings",
+            height=5  # Show only 5 rows
+        )
+        
+        # Configure columns
+        self.activity_tree.heading("Time", text="Time")
+        self.activity_tree.heading("Activity", text="Activity")
+        
+        self.activity_tree.column("Time", width=100)
+        self.activity_tree.column("Activity", width=300)
         
         scrollbar = ttk.Scrollbar(
             activity_frame,
@@ -128,8 +175,8 @@ class HacktoberfestDesktopUI:
         )
         self.activity_tree.configure(yscrollcommand=scrollbar.set)
         
-        self.activity_tree.pack(side='left', fill='both', expand=True)
-        scrollbar.pack(side='right', fill='y')
+        self.activity_tree.pack(side='left', fill='both', expand=True, padx=(5, 0), pady=5)
+        scrollbar.pack(side='right', fill='y', pady=5)
 
     def setup_contributors_view(self):
         # Search frame
@@ -360,18 +407,25 @@ class HacktoberfestDesktopUI:
         self.refresh_leaderboard()
 
     def update_dashboard_stats(self, metrics):
-        self.stats_labels['total_contributors'].config(
-            text=f"Total Contributors: {metrics['total_contributors']}"
-        )
-        self.stats_labels['total_contributions'].config(
-            text=f"Total Contributions: {metrics['total_contributions']}"
-        )
-        self.stats_labels['completion_rate'].config(
-            text=f"Completion Rate: {metrics['hacktoberfest_completion_rate']:.1f}%"
-        )
-        self.stats_labels['active_days'].config(
-            text=f"Active Days: {metrics['active_days']}"
-        )
+        self.stats_vars['contributors'].set(str(metrics['total_contributors']))
+        self.stats_vars['contributions'].set(str(metrics['total_contributions']))
+        self.stats_vars['completion'].set(f"{metrics['hacktoberfest_completion_rate']:.0f}%")
+        
+        # Clear existing activities
+        for item in self.activity_tree.get_children():
+            self.activity_tree.delete(item)
+        
+        # Add recent activities (last 5)
+        recent_activities = [
+            ("Just now", "New contribution added by @user1"),
+            ("2h ago", "Badge earned: 🔥 3-day streak by @user2"),
+            ("5h ago", "New contributor joined: @user3"),
+            ("1d ago", "Hacktoberfest completed by @user4"),
+            ("2d ago", "New contribution added by @user5")
+        ]
+        
+        for time, activity in recent_activities:
+            self.activity_tree.insert("", "end", values=(time, activity))
 
     def refresh_contributors_list(self):
         # Clear existing items
