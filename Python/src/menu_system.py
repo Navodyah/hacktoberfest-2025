@@ -6,6 +6,7 @@ import webbrowser
 from datetime import datetime
 
 class MenuSystem:
+    
     def __init__(self, root, tracker):
         """Initialize the menu system"""
         self.root = root
