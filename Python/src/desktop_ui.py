@@ -40,28 +40,8 @@ class HacktoberfestDesktopUI:
                        foreground=[('disabled', '#dddddd')])
         
     def create_menu(self):
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
-        
-        # File menu
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Export Metrics", command=self.export_metrics)
-        file_menu.add_command(label="Export to CSV", command=self.export_csv)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
-        
-        # View menu
-        view_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="View", menu=view_menu)
-        view_menu.add_command(label="Performance Report", command=self.show_performance_report)
-        view_menu.add_command(label="Project Insights", command=self.show_insights)
-        
-        # Help menu
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="Documentation", command=lambda: self.open_documentation())
-        help_menu.add_command(label="About", command=self.show_about)
+        from menu_system import MenuSystem
+        self.menu_system = MenuSystem(self.root, self.tracker)
 
     def create_notebook(self):
         self.notebook = ttk.Notebook(self.root)
@@ -760,113 +740,7 @@ class HacktoberfestDesktopUI:
                 row=i, column=1, sticky='w', padx=5, pady=2
             )
 
-    def export_metrics(self):
-        try:
-            self.tracker.export_metrics("metrics_export.json")
-            messagebox.showinfo(
-                "Success",
-                "Metrics exported to metrics_export.json"
-            )
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
 
-    def export_csv(self):
-        try:
-            self.tracker.export_csv("all")
-            messagebox.showinfo(
-                "Success",
-                "Data exported to CSV files in the exports directory"
-            )
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def show_performance_report(self):
-        metrics = self.tracker.get_project_performance_metrics()
-        report_window = tk.Toplevel(self.root)
-        report_window.title("Performance Report")
-        report_window.geometry("600x400")
-        
-        text_widget = tk.Text(report_window, wrap=tk.WORD, padx=10, pady=10)
-        text_widget.pack(fill='both', expand=True)
-        
-        report = f"""Performance Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}
-        
-Project Overview:
-----------------
-Total Contributors: {metrics['total_contributors']}
-Total Contributions: {metrics['total_contributions']}
-Hacktoberfest Completion Rate: {metrics['hacktoberfest_completion_rate']:.1f}%
-Active Days: {metrics['active_days']}
-
-Contribution Statistics:
----------------------
-Average Contributions per User: {metrics['average_contributions_per_user']:.1f}
-Most Active Day: {metrics['most_active_day']}
-Contributors Completed Hacktoberfest: {metrics['completed_hacktoberfest']}
-
-Repository Activity:
------------------
-Active Repositories: {len(metrics['repository_contributions'])}
-Top Repository: {max(metrics['repository_contributions'].items(), key=lambda x: x[1])[0]}
-"""
-        
-        text_widget.insert('1.0', report)
-        text_widget.config(state='disabled')
-
-    def show_insights(self):
-        insights = self.tracker.get_performance_insights()
-        
-        insights_window = tk.Toplevel(self.root)
-        insights_window.title("Project Insights")
-        insights_window.geometry("600x400")
-        
-        text_widget = tk.Text(insights_window, wrap=tk.WORD, padx=10, pady=10)
-        text_widget.pack(fill='both', expand=True)
-        
-        text_widget.insert('1.0', "Project Insights\n\n")
-        
-        if 'highlights' in insights:
-            text_widget.insert('end', "🎉 Highlights:\n")
-            for highlight in insights['highlights']:
-                text_widget.insert('end', f"• {highlight}\n")
-            text_widget.insert('end', "\n")
-        
-        if 'concerns' in insights:
-            text_widget.insert('end', "⚠️ Areas for Attention:\n")
-            for concern in insights['concerns']:
-                text_widget.insert('end', f"• {concern}\n")
-            text_widget.insert('end', "\n")
-        
-        if 'recommendations' in insights:
-            text_widget.insert('end', "💡 Recommendations:\n")
-            for rec in insights['recommendations']:
-                text_widget.insert('end', f"• {rec}\n")
-        
-        text_widget.config(state='disabled')
-
-    def show_about(self):
-        messagebox.showinfo(
-            "About",
-            "Hacktoberfest 2025 Project Tracker\n\n"
-            "A tool for tracking and managing Hacktoberfest contributions.\n\n"
-            "Version: 1.0.0\n"
-            "Created by: Hacktoberfest Contributors"
-        )
-
-    def open_documentation(self):
-        docs_path = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "docs",
-            "API.md"
-        )
-        if os.path.exists(docs_path):
-            webbrowser.open(f"file://{docs_path}")
-        else:
-            messagebox.showerror(
-                "Error",
-                "Documentation file not found"
-            )
 
     def run(self):
         self.root.mainloop()
