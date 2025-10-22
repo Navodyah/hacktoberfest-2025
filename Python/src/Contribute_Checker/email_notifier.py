@@ -2,7 +2,12 @@
 Email notification system with JWT token generation for Hacktoberfest contributors.
 """
 
-import jwt
+# PyJWT provides the `jwt` module. It's an optional dependency for email token
+# generation. Import lazily and provide a helpful error if it's not available.
+try:
+    import jwt
+except Exception:  # ImportError could be caused by absence or import-time errors
+    jwt = None
 import smtplib
 import os
 from datetime import datetime, timedelta
@@ -47,6 +52,12 @@ class EmailNotifier:
         Returns:
             str: JWT token
         """
+        # Ensure jwt is available
+        if jwt is None:
+            raise RuntimeError(
+                "PyJWT is required for token generation. Install with: pip install PyJWT"
+            )
+
         payload = {
             "email": email,
             "username": username,
@@ -71,6 +82,12 @@ class EmailNotifier:
         Returns:
             str: JWT token
         """
+        # Ensure jwt is available
+        if jwt is None:
+            raise RuntimeError(
+                "PyJWT is required for token generation. Install with: pip install PyJWT"
+            )
+
         payload = {
             "email": email,
             "username": username,
@@ -92,6 +109,10 @@ class EmailNotifier:
         Returns:
             Tuple[bool, Optional[Dict]]: (is_valid, token_data)
         """
+        # Ensure jwt is available
+        if jwt is None:
+            return False, {"error": "PyJWT not installed. Install with: pip install PyJWT"}
+
         try:
             payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
             return True, payload
