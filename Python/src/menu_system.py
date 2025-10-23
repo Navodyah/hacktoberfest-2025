@@ -121,6 +121,7 @@ class MenuSystem:
         report_window.title("Performance Report")
         report_window.geometry("600x400")
         
+        
         metrics = self.tracker.get_project_performance_metrics()
         
         text_widget = tk.Text(report_window, wrap=tk.WORD, padx=10, pady=10)
@@ -207,6 +208,7 @@ class MenuSystem:
         guide_window.geometry("600x400")
         
         # Add quick start guide content here
+        
 
     def check_updates(self):
         """Check for software updates"""
