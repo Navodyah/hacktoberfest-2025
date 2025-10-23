@@ -25,6 +25,14 @@ class HacktoberfestDesktopUI:
         self.style.configure("Title.TLabel", font=("Helvetica", 16, "bold"))
         self.style.configure("Header.TLabel", font=("Helvetica", 12, "bold"))
         self.style.configure("Stats.TLabel", font=("Helvetica", 10))
+        # Treeview / leaderboard styles
+        # Heading color (may be theme-dependent on Windows)
+        try:
+            self.style.configure("Treeview.Heading", background="#1f6feb", foreground="#ffffff", font=("Helvetica", 10, "bold"))
+            self.style.configure("Treeview", rowheight=24, font=("Helvetica", 10))
+        except Exception:
+            # Some themes may restrict heading styling; ignore failures
+            pass
         
     def create_menu(self):
         menubar = tk.Menu(self.root)
@@ -182,6 +190,15 @@ class HacktoberfestDesktopUI:
             command=self.leaderboard_tree.yview
         )
         self.leaderboard_tree.configure(yscrollcommand=scrollbar.set)
+
+        # Configure alternating row colors and a special top-row highlight
+        # Tag configuration on Treeview controls row background colors
+        try:
+            self.leaderboard_tree.tag_configure('even', background='#eef6ff')
+            self.leaderboard_tree.tag_configure('odd', background='#ffffff')
+            self.leaderboard_tree.tag_configure('top', background='#fff8dc')
+        except Exception:
+            pass
         
         self.leaderboard_tree.pack(side='left', fill='both', expand=True, padx=10, pady=5)
         scrollbar.pack(side='right', fill='y')
@@ -302,22 +319,29 @@ class HacktoberfestDesktopUI:
         # Get rankings
         rankings = self.tracker.get_contributors_ranking()
         
-        for rank in rankings:
+        for i, rank in enumerate(rankings, start=1):
             metrics = self.tracker.get_contributor_metrics(rank['username'])
             badges = "🏆" if metrics['hacktoberfest_complete'] else ""
             if metrics['contribution_streak'] >= 3:
                 badges += "🔥"
-            
+
+            # Choose tag: top (first), even/odd for alternating rows
+            if i == 1:
+                tag = 'top'
+            else:
+                tag = 'even' if i % 2 == 0 else 'odd'
+
             self.leaderboard_tree.insert(
                 "",
                 "end",
                 values=(
-                    rank['rank'],
+                    i,
                     rank['username'],
                     f"{rank['engagement_score']:.1f}",
                     f"{metrics['contribution_streak']} days",
                     badges
-                )
+                ),
+                tags=(tag,)
             )
 
     def filter_contributors(self, *args):
