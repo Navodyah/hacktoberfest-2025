@@ -22,6 +22,7 @@ class EmailNotifier:
     def __init__(self, smtp_server: str = None, smtp_port: int = 587, 
                  sender_email: str = None, sender_password: str = None,
                  jwt_secret: str = None):
+        
         """
         Initialize the email notifier.
         
@@ -39,10 +40,12 @@ class EmailNotifier:
         self.jwt_secret = jwt_secret or os.getenv("JWT_SECRET", "your-secret-key-change-this")
         self.notification_history: List[Dict] = []
     
+    
     def generate_verification_token(self, email: str, username: str, 
                                     expires_in_hours: int = 24) -> str:
         """
         Generate a JWT verification token for a contributor.
+        
         
         Args:
             email (str): Contributor's email address
